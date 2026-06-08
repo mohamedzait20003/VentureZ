@@ -36,9 +36,9 @@ const (
 // users, sessions and user_tokens. The api-gateway verifies tokens with the
 // public key; it never mints them.
 type IdentityClient interface {
-	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*AuthResponse, error)
-	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*AuthResponse, error)
-	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*AuthResponse, error)
+	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
+	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*SimpleResponse, error)
 	RequestPasswordReset(ctx context.Context, in *RequestPasswordResetRequest, opts ...grpc.CallOption) (*SimpleResponse, error)
 	ResetPassword(ctx context.Context, in *ResetPasswordRequest, opts ...grpc.CallOption) (*SimpleResponse, error)
@@ -53,9 +53,9 @@ func NewIdentityClient(cc grpc.ClientConnInterface) IdentityClient {
 	return &identityClient{cc}
 }
 
-func (c *identityClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*AuthResponse, error) {
+func (c *identityClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AuthResponse)
+	out := new(RegisterResponse)
 	err := c.cc.Invoke(ctx, Identity_Register_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -63,9 +63,9 @@ func (c *identityClient) Register(ctx context.Context, in *RegisterRequest, opts
 	return out, nil
 }
 
-func (c *identityClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*AuthResponse, error) {
+func (c *identityClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AuthResponse)
+	out := new(LoginResponse)
 	err := c.cc.Invoke(ctx, Identity_Login_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -73,9 +73,9 @@ func (c *identityClient) Login(ctx context.Context, in *LoginRequest, opts ...gr
 	return out, nil
 }
 
-func (c *identityClient) Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*AuthResponse, error) {
+func (c *identityClient) Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AuthResponse)
+	out := new(LoginResponse)
 	err := c.cc.Invoke(ctx, Identity_Refresh_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -131,9 +131,9 @@ func (c *identityClient) VerifyEmail(ctx context.Context, in *VerifyEmailRequest
 // users, sessions and user_tokens. The api-gateway verifies tokens with the
 // public key; it never mints them.
 type IdentityServer interface {
-	Register(context.Context, *RegisterRequest) (*AuthResponse, error)
-	Login(context.Context, *LoginRequest) (*AuthResponse, error)
-	Refresh(context.Context, *RefreshRequest) (*AuthResponse, error)
+	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
+	Login(context.Context, *LoginRequest) (*LoginResponse, error)
+	Refresh(context.Context, *RefreshRequest) (*LoginResponse, error)
 	Logout(context.Context, *LogoutRequest) (*SimpleResponse, error)
 	RequestPasswordReset(context.Context, *RequestPasswordResetRequest) (*SimpleResponse, error)
 	ResetPassword(context.Context, *ResetPasswordRequest) (*SimpleResponse, error)
@@ -148,13 +148,13 @@ type IdentityServer interface {
 // pointer dereference when methods are called.
 type UnimplementedIdentityServer struct{}
 
-func (UnimplementedIdentityServer) Register(context.Context, *RegisterRequest) (*AuthResponse, error) {
+func (UnimplementedIdentityServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedIdentityServer) Login(context.Context, *LoginRequest) (*AuthResponse, error) {
+func (UnimplementedIdentityServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Login not implemented")
 }
-func (UnimplementedIdentityServer) Refresh(context.Context, *RefreshRequest) (*AuthResponse, error) {
+func (UnimplementedIdentityServer) Refresh(context.Context, *RefreshRequest) (*LoginResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Refresh not implemented")
 }
 func (UnimplementedIdentityServer) Logout(context.Context, *LogoutRequest) (*SimpleResponse, error) {

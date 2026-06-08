@@ -1,26 +1,7 @@
-# Local dev stack.
-# Before `up`:
-#   1) generate identity-engine's RS256 keypair into services/identity-engine/keys/
-#      (jwt_private.pem + jwt_public.pem)
-#   2) apply migrations:  make migrate-up   (postgres is exposed on :5432)
 services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: venturez
-      POSTGRES_PASSWORD: venturez
-      POSTGRES_DB: venturez
-    ports: ["5432:5432"]
-    volumes: ["pgdata:/var/lib/postgresql/data"]
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U venturez -d venturez"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
   jaeger:
     image: jaegertracing/all-in-one:latest
-    ports: ["16686:16686", "4317:4317"] # UI at http://localhost:16686
+    ports: ["16686:16686", "4317:4317"]
 
   identity-engine:
     build:
@@ -28,7 +9,7 @@ services:
       dockerfile: services/identity-engine/Dockerfile
     environment:
       GRPC_ADDR: ":50053"
-      DATABASE_URL: postgres://venturez:venturez@postgres:5432/venturez?sslmode=disable
+      DATABASE_URL: postgres://venturez:venturez@host.docker.internal:5432/venturez?sslmode=disable
       JWT_PRIVATE_KEY_PATH: /keys/jwt_private.pem
       JWT_ISSUER: venturez-identity
       APP_BASE_URL: http://localhost:3000
@@ -40,9 +21,8 @@ services:
       MAIL_FROM: ${MAIL_FROM:-VentureZ <no-reply@venturez.dev>}
     volumes:
       - ./services/identity-engine/keys:/keys:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   api-gateway:
     build:
@@ -62,14 +42,10 @@ services:
   financial-engine:
     build: ./services/financial-engine
     environment:
-      DATABASE_URL: postgres://venturez:venturez@postgres:5432/venturez?sslmode=disable
+      DATABASE_URL: postgres://venturez:venturez@host.docker.internal:5432/venturez?sslmode=disable
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
-    depends_on:
-      postgres:
-        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # agent: not implemented yet (no services/agent). Add when the Python service
   # exists; it will build from ./services/agent and dial financial-engine:50051.
-
-volumes:
-  pgdata:

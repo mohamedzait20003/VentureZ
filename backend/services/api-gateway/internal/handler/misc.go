@@ -20,6 +20,6 @@ func Me(w http.ResponseWriter, r *http.Request) {
 
 	respond.JSON(w, http.StatusOK, map[string]any{
 		"user_id": claims.Subject,
-		"roles": claims.Roles,
+		"roles":   claims.Roles,
 	})
 }

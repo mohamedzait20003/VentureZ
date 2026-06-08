@@ -8,9 +8,9 @@ option go_package = "github.com/venturez/backend/gen/go/identity/v1;identityv1";
 // users, sessions and user_tokens. The api-gateway verifies tokens with the
 // public key; it never mints them.
 service Identity {
-  rpc Register(RegisterRequest) returns (AuthResponse);
-  rpc Login(LoginRequest) returns (AuthResponse);
-  rpc Refresh(RefreshRequest) returns (AuthResponse);
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Refresh(RefreshRequest) returns (LoginResponse);
   rpc Logout(LogoutRequest) returns (SimpleResponse);
   rpc RequestPasswordReset(RequestPasswordResetRequest) returns (SimpleResponse);
   rpc ResetPassword(ResetPasswordRequest) returns (SimpleResponse);
@@ -23,22 +23,64 @@ message DeviceInfo {
   string device_name = 3;
 }
 
-message User {
-  string id             = 1;
-  string email          = 2;
-  string username       = 3;
-  string first_name     = 4;
-  string last_name      = 5;
-  string role           = 6;
-  bool   email_verified = 7;
+// ---- profile sub-objects ----
+
+message Session {
+  string id           = 1;
+  string device_name  = 2;
+  string ip_address   = 3;
+  string user_agent   = 4;
+  string created_at   = 5;
+  string last_used_at = 6;
+  string expires_at   = 7;
 }
 
-message AuthResponse {
-  string access_token  = 1;  // short-lived RS256 JWT
-  string refresh_token = 2;  // opaque; the gateway sets it as an HttpOnly cookie
-  int64  expires_in    = 3;  // access-token TTL in seconds
-  User   user          = 4;
+message Subscription {
+  string id                 = 1;
+  string status             = 2;
+  string tier_code          = 3;
+  string tier_name          = 4;
+  int64  price_cents        = 5;
+  string current_period_end = 6;
 }
+
+message Business {
+  string id       = 1;
+  string name     = 2;
+  string industry = 3;
+  string country  = 4;
+  string currency = 5;
+}
+
+// Profile is the full picture returned on login/refresh. For admins only the
+// four basic identity fields are populated; clients also get sessions,
+// subscriptions and businesses.
+message Profile {
+  string email      = 1;
+  string username   = 2;
+  string first_name = 3;
+  string last_name  = 4;
+  repeated Session      sessions      = 5;
+  Subscription          subscription  = 6;  // current active subscription
+  repeated Subscription subscriptions = 7;  // all subscriptions
+  repeated Business     businesses    = 8;
+}
+
+// ---- responses ----
+
+message RegisterResponse {
+  string message = 1;
+}
+
+message LoginResponse {
+  string  access_token  = 1;  // short-lived RS256 JWT
+  string  refresh_token = 2;  // opaque; the gateway moves it into an HttpOnly cookie
+  int64   expires_in    = 3;  // access-token TTL in seconds
+  string  role          = 4;
+  Profile profile       = 5;
+}
+
+// ---- requests ----
 
 message RegisterRequest {
   string email      = 1;
@@ -60,8 +102,8 @@ message RefreshRequest {
   DeviceInfo device    = 2;
 }
 
-message LogoutRequest                { string refresh_token = 1; }
-message RequestPasswordResetRequest  { string email = 1; }
-message ResetPasswordRequest         { string token = 1; string new_password = 2; }
-message VerifyEmailRequest           { string token = 1; }
-message SimpleResponse               { bool success = 1; }
+message LogoutRequest               { string refresh_token = 1; }
+message RequestPasswordResetRequest { string email = 1; }
+message ResetPasswordRequest        { string token = 1; string new_password = 2; }
+message VerifyEmailRequest          { string token = 1; }
+message SimpleResponse              { bool success = 1; }

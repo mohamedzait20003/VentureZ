@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package financial.v1;
+
+option go_package = "github.com/venturez/backend/gen/go/financial/v1;financialv1";
+
+// FinancialEngine performs deterministic money math. The agent calls these as
+// tools — the LLM never computes numbers itself.
+service FinancialEngine {
+  // ProjectRunway estimates how many months until cash runs out.
+  rpc ProjectRunway(ProjectRunwayRequest) returns (ProjectRunwayResponse);
+
+  // RunScenario projects cash position under a what-if (e.g. a new hire, a raise).
+  rpc RunScenario(RunScenarioRequest) returns (RunScenarioResponse);
+}
+
+// Money is always integer cents to avoid floating-point rounding errors.
+message ProjectRunwayRequest {
+  int64 cash_on_hand_cents = 1;
+  int64 monthly_burn_cents = 2;
+  repeated MonthlyRevenue projected_revenue = 3; // optional, ordered by month
+}
+
+message MonthlyRevenue {
+  int32 month_offset = 1;       // 0 = current month, 1 = next, ...
+  int64 amount_cents = 2;
+}
+
+message ProjectRunwayResponse {
+  int32 runway_months = 1;            // -1 means "cash-flow positive, no runout"
+  string projected_zero_cash_date = 2; // ISO-8601 date, empty if runway_months == -1
+  repeated MonthlyBalance balances = 3;
+}
+
+message MonthlyBalance {
+  int32 month_offset = 1;
+  int64 ending_cash_cents = 2;
+}
+
+message RunScenarioRequest {
+  ProjectRunwayRequest baseline = 1;
+  repeated ScenarioChange changes = 2;
+}
+
+message ScenarioChange {
+  string label = 1;                 // e.g. "Hire 2 engineers"
+  int64 monthly_burn_delta_cents = 2;
+  int32 starting_month_offset = 3;
+}
+
+message RunScenarioResponse {
+  ProjectRunwayResponse baseline = 1;
+  ProjectRunwayResponse scenario = 2;
+}

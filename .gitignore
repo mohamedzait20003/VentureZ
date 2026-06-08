@@ -1,0 +1,53 @@
+# ============ VentureZ — root .gitignore (frontend + backend) ============
+
+# ---- Secrets / keys (NEVER commit) ----
+keys/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ---- Env / secrets ----
+.env
+.env.*
+!.env.example
+*.local
+
+# ---- Node / frontend (TanStack Start + Vite) ----
+node_modules/
+dist/
+.output/
+.nitro/
+.vinxi/
+.tanstack/
+.vite/
+*.tsbuildinfo
+
+# ---- Go (backend services) ----
+*.exe
+*.test
+*.out
+bin/
+vendor/
+
+# ---- Python (agent service) ----
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Editors / OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- Logs ----
+*.log
+
+# Note: backend/gen/ (generated gRPC stubs) is committed ON PURPOSE for this
+# portfolio repo so it clones-and-builds without the protoc toolchain. In a team
+# setup you'd typically ignore it here and regenerate in CI.

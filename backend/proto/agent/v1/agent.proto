@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package agent.v1;
+
+option go_package = "github.com/venturez/backend/gen/go/agent/v1;agentv1";
+
+// Agent is the CFO brain: it interprets a natural-language planning request,
+// orchestrates a Claude tool-use loop, and calls the financial-engine for numbers.
+service Agent {
+  rpc Plan(PlanRequest) returns (PlanResponse);
+}
+
+message PlanRequest {
+  string org_id = 1;
+  string user_message = 2; // e.g. "Can we afford two senior hires this quarter?"
+}
+
+message PlanResponse {
+  string answer = 1;              // natural-language CFO response
+  repeated ToolCall tool_calls = 2; // audit trail of what numbers were computed
+}
+
+message ToolCall {
+  string tool_name = 1;
+  string arguments_json = 2;
+  string result_json = 3;
+}
